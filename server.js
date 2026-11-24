@@ -36,7 +36,7 @@ ${text}`;
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
+        model: process.env.GROQ_MODEL || 'openai/gpt-oss-120b',
         messages: [
           { role: 'system', content: 'Você cria quizzes educacionais. Siga o formato JSON solicitado e retorne somente JSON válido.' },
           { role: 'user', content: prompt }
@@ -49,7 +49,7 @@ ${text}`;
     const data = await response.json();
     if (!response.ok) {
       console.error('Erro da API Groq:', response.status, data?.error?.message || 'sem detalhes');
-      return res.status(502).json({ error: 'A API Groq não conseguiu gerar o quiz. Verifique a chave, o modelo e os limites da conta.' });
+      return res.status(502).json({ error: data?.error?.message || 'A API Groq não conseguiu gerar o quiz. Verifique a chave e os limites da conta.' });
     }
 
     const raw = data?.choices?.[0]?.message?.content;
