@@ -5,9 +5,9 @@ app.use(express.json({ limit: '100kb' }));
 app.use(express.static(__dirname));
 
 app.post('/api/quiz', async (req, res) => {
-  const apiKey = process.env.GROK_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
-    return res.status(503).json({ error: 'A API do Grok ainda não foi configurada no servidor.' });
+    return res.status(503).json({ error: 'A chave da API Groq não foi configurada no servidor.' });
   }
 
   const text = typeof req.body?.text === 'string' ? req.body.text.trim() : '';
@@ -29,16 +29,16 @@ Texto de referência:
 ${text}`;
 
   try {
-    const response = await fetch('https://api.x.ai/v1/chat/completions', {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: process.env.GROK_MODEL || 'grok-3-mini',
+        model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
         messages: [
-          { role: 'system', content: 'Você cria quizzes educacionais. Siga o formato JSON solicitado.' },
+          { role: 'system', content: 'Você cria quizzes educacionais. Siga o formato JSON solicitado e retorne somente JSON válido.' },
           { role: 'user', content: prompt }
         ],
         response_format: { type: 'json_object' },
@@ -48,13 +48,13 @@ ${text}`;
 
     const data = await response.json();
     if (!response.ok) {
-      console.error('Erro da API xAI:', response.status, data?.error?.message || 'sem detalhes');
-      return res.status(502).json({ error: 'A API do Grok não conseguiu gerar o quiz. Verifique a chave, o modelo e os limites da conta.' });
+      console.error('Erro da API Groq:', response.status, data?.error?.message || 'sem detalhes');
+      return res.status(502).json({ error: 'A API Groq não conseguiu gerar o quiz. Verifique a chave, o modelo e os limites da conta.' });
     }
 
     const raw = data?.choices?.[0]?.message?.content;
     if (typeof raw !== 'string' || !raw.trim()) {
-      return res.status(502).json({ error: 'A API do Grok retornou uma resposta vazia.' });
+      return res.status(502).json({ error: 'A API Groq retornou uma resposta vazia.' });
     }
 
     const parsed = JSON.parse(raw);
@@ -71,11 +71,11 @@ ${text}`;
         && q.correta < q.opcoes.length
       );
 
-    if (!valid) return res.status(502).json({ error: 'O Grok retornou questões em formato inválido.' });
+    if (!valid) return res.status(502).json({ error: 'A Groq retornou questões em formato inválido.' });
     return res.json({ questions });
   } catch (error) {
     console.error('Erro ao gerar quiz:', error.message);
-    return res.status(502).json({ error: 'Não foi possível conectar à API do Grok.' });
+    return res.status(502).json({ error: 'Não foi possível conectar à API Groq.' });
   }
 });
 
