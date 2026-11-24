@@ -1,16 +1,16 @@
-# Gerador de Quiz com Grok
+# Gerador de Quiz com Groq
 
-Aplicação web que cria de 1 a 5 perguntas de múltipla escolha com base no conteúdo informado. A chamada à API xAI é feita pelo servidor Express; a chave não é enviada ao navegador nem armazenada no código.
+Aplicação web que cria de 1 a 5 perguntas de múltipla escolha com base no conteúdo informado. A chamada à API da Groq é feita pelo servidor Express; a chave não é enviada ao navegador nem armazenada no código.
 
 ## Requisitos
 
 - Node.js 18 ou superior
-- Uma chave de API da xAI, criada no painel oficial da xAI
+- Uma chave de API da Groq, criada no painel oficial da Groq
 
 ## Executar localmente
 
 1. Copie `.env.example` para um arquivo chamado `.env`.
-2. Abra `.env` e substitua `cole_sua_chave_aqui` pela sua chave da xAI. Não compartilhe esse arquivo nem o envie ao GitHub.
+2. Abra `.env` e substitua `cole_sua_chave_aqui` pela sua chave da Groq. Não compartilhe esse arquivo nem o envie ao GitHub.
 3. Instale as dependências e inicie:
 
 ```bash
@@ -32,8 +32,8 @@ Depois abra <http://localhost:3000>.
 
 ## Hospedagem
 
-O GitHub Pages hospeda apenas arquivos estáticos e não executa o servidor Express. Para a geração por IA funcionar, publique o projeto em um serviço que execute Node.js/Docker e configure `GROK_API_KEY` como variável de ambiente no painel desse serviço.
+O GitHub Pages hospeda apenas arquivos estáticos e não executa o servidor Express. Para a geração por IA funcionar, publique o projeto em um serviço que execute Node.js/Docker e configure `GROQ_API_KEY` como variável de ambiente no painel desse serviço.
 
 ## Segurança
 
-Uma chave enviada em mensagens ou colocada em código público deve ser considerada exposta. Revogue chaves expostas no painel da xAI e crie outra. Nunca adicione o arquivo `.env_ ` ao Git.
+Uma chave enviada em mensagens ou colocada em código público deve ser considerada exposta. Revogue a chave exposta no painel da Groq e crie outra. Nunca adicione o arquivo `.env` ao Git.
