@@ -37,7 +37,7 @@ Depois abra <http://localhost:3000>.
 3. Nas configurações do serviço, adicione a variável secreta `GROQ_API_KEY` com uma chave válida da Groq.
 4. Aguarde o deploy e abra a URL `onrender.com` fornecida pelo Render. Use essa URL para o quiz; a URL do GitHub Pages não executa o backend.
 
-Não coloque a chave em `index.html), no `render.yaml` ou em arquivos enviados ao GitHub.
+Não coloque a chave em `index.html`, no `render.yaml` ou em arquivos enviados ao GitHub.
 
 ## Hospedagem
 
