@@ -30,6 +30,15 @@ docker compose up --build
 
 Depois abra <http://localhost:3000>.
 
+## Publicar no Render (backend + página no mesmo serviço)
+
+1. Entre em <https://render.com> e conecte sua conta GitHub.
+2. Crie um **Blueprint** e selecione este repositório. O arquivo `render.yaml` configura o serviço Node.js.
+3. Nas configurações do serviço, adicione a variável secreta `GROQ_API_KEY` com uma chave válida da Groq.
+4. Aguarde o deploy e abra a URL `onrender.com` fornecida pelo Render. Use essa URL para o quiz; a URL do GitHub Pages não executa o backend.
+
+Não coloque a chave em `index.html), no `render.yaml` ou em arquivos enviados ao GitHub.
+
 ## Hospedagem
 
 O GitHub Pages hospeda apenas arquivos estáticos e não executa o servidor Express. Para a geração por IA funcionar, publique o projeto em um serviço que execute Node.js/Docker e configure `GROQ_API_KEY` como variável de ambiente no painel desse serviço.
