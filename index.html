@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Quiz com IA</title>
+    <title>Gerador de Quiz com IA Real</title>
     <style>
         body { font-family: Arial, sans-serif; max-width: 700px; margin: 30px auto; padding: 20px; background: #f4f7f6; color: #333; }
         .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -19,8 +19,8 @@
 </head>
 <body>
     <div class="card">
-        <h2>Gerador de Quiz Inteligente</h2>
-        <p>Cole seu texto de estudo abaixo e defina quantas questões deseja responder:</p>
+        <h2>Gerador de Quiz com IA</h2>
+        <p>Cole seu texto de estudo e defina quantas questões a IA deve criar:</p>
         
         <label for="conteudo">Conteúdo da Matéria:</label>
         <textarea id="conteudo" rows="6" placeholder="Cole aqui o texto, resumo ou notas da aula..."></textarea>
@@ -28,58 +28,93 @@
         <label for="qtd">Quantidade de Questões:</label>
         <input type="number" id="qtd" min="1" max="5" value="3">
         
-        <button onclick="gerarQuiz()">Gerar Perguntas</button>
+        <button onclick="gerarQuizComIA()">Gerar com IA</button>
         
         <div id="quiz-container" style="margin-top: 20px;"></div>
     </div>
 
-    <script>
-        function gerarQuiz() {
+    <!-- SDK do Google Gen AI -->
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/genai": "https://esm.run/@google/genai"
+        }
+      }
+    </script>
+
+    <script type="module">
+        import { GoogleGenAI } from "@google/genai";
+
+        // Inicializa a IA (Certifique-se de substituir pela sua chave de API do Gemini se necessário ou usar o ambiente seguro)
+        const ai = new GoogleGenAI({ apiKey: "SUA_CHAVE_DE_API_AQUI" });
+
+        window.gerarQuizComIA = async function() {
             const texto = document.getElementById('conteudo').value.trim();
-            const qtd = parseInt(document.getElementById('qtd').value);
+            const qtd = document.getElementById('qtd').value;
             const container = document.getElementById('quiz-container');
             
             if (!texto) {
-                alert('Por favor, insira algum conteúdo para gerar o quiz!');
+                alert('Por favor, insira algum conteúdo!');
                 return;
             }
 
-            container.innerHTML = '<h3>Gerando questões...</h3>';
+            container.innerHTML = '<h3>A IA está criando as suas questões... 🧠</h3>';
 
-            // Simulação inteligente baseada nas frases do texto inserido
-            setTimeout(() => {
-                const frases = texto.split(/[.!?]+/).filter(f => f.trim().length > 10);
-                let html = '<h3>Perguntas Geradas:</h3>';
+            try {
+                const prompt = `Com base exclusivamente no texto abaixo, crie exatamente ${qtd} perguntas de múltipla escolha. 
+                Retorne APENAS um JSON válido no seguinte formato de array, sem blocos de código markdown extras:
+                [
+                  {
+                    "pergunta": "Texto da pergunta?",
+                    "opcoes": ["Opção A", "Opção B", "Opção C", "Opção D"],
+                    "correta": 0
+                  }
+                ]
+                Onde 'correta' é o índice numérico da resposta correta (de 0 a 3).
+                Texto de referência: ${texto}`;
+
+                const response = await ai.models.generateContent({
+                    model: 'gemini-2.5-flash',
+                    contents: prompt,
+                });
+
+                let respostaTexto = response.text.trim();
+                // Limpeza caso a IA retorne marcações de código markdown
+                respostaTexto = respostaTexto.replace(/```json/g, '').replace(/```/g, '').trim();
                 
-                const total = Math.min(qtd, frases.length > 0 ? frases.length : 1);
+                const questoes = JSON.parse(respostaTexto);
                 
-                for (let i = 0; i < total; i++) {
-                    const baseFrase = frases[i % frases.length].trim();
+                let html = '<h3>Quiz Gerado pela IA:</h3>';
+                questoes.forEach((q, i) => {
                     html += `
                         <div class="question-box">
-                            <p><strong>Questão ${i + 1}:</strong> Com base no texto, o que podemos afirmar sobre: <em>"${baseFrase.substring(0, 40)}..."</em>?</p>
-                            <label class="option"><input type="radio" name="q${i}" onclick="verificar(this, true)"> A) É um conceito central abordado no texto.</label>
-                            <label class="option"><input type="radio" name="q${i}" onclick="verificar(this, false)"> B) É uma informação secundária sem relação direta.</label>
-                            <label class="option"><input type="radio" name="q${i}" onclick="verificar(this, false)"> C) Contradiz os objetivos principais da matéria.</label>
-                        </div>
+                            <p><strong>Questão ${i + 1}:</strong> ${q.pergunta}</p>
                     `;
-                }
+                    q.opcoes.forEach((opt, j) => {
+                        html += `<label class="option"><input type="radio" name="q${i}" onclick="verificarResposta(this, ${j}, ${q.correta})"> ${String.fromCharCode(65 +యన్ = j)}) ${opt}</label>`;
+                    });
+                    html += `</div>`;
+                });
                 container.innerHTML = html;
-            }, 600);
-        }
 
-        function verificar(element, isCorrect) {
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = `<p style="color: red;">Erro ao gerar perguntas com a IA. Verifique sua chave de API ou tente novamente.</p>`;
+            }
+        };
+
+        window.verificarResposta = function(element, selecionada, correta) {
             const parent = element.parentElement.parentElement;
             const options = parent.querySelectorAll('.option');
-            options.forEach(opt => {
+            options.forEach((opt, idx) => {
                 opt.style.pointerEvents = 'none';
-                if(opt.querySelector('input').getAttribute('onclick').includes('true')) {
+                if (idx === correta) {
                     opt.classList.add('correct');
-                } else if(opt.querySelector('input') === element && !isCorrect) {
+                } else if (idx === selecionada && selecionada !== correta) {
                     opt.classList.add('incorrect');
                 }
             });
-        }
+        };
     </script>
 </body>
 </html>
