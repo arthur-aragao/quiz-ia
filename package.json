@@ -1,7 +1,7 @@
 {
-  "name": "gerador-quiz-gemini",
-  "version": "1.0.0",
-  "description": "Gera quizzes de múltipla escolha com a API do Gemini.",
+  "name": "gerador-quiz-grok",
+  "version": "1.1.0",
+  "description": "Gera quizzes de múltipla escolha usando a API do Grok (xAI).",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
