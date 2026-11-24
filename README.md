@@ -1,24 +1,39 @@
-# Gerador de Quiz com Gemini
+# Gerador de Quiz com Grok
 
-Aplicação web que cria perguntas de múltipla escolha a partir do conteúdo informado e permite conferir as respostas no navegador.
+Aplicação web que cria de 1 a 5 perguntas de múltipla escolha com base no conteúdo informado. A chamada à API xAI é feita pelo servidor Express; a chave não é enviada ao navegador nem armazenada no código.
 
-## Usar
+## Requisitos
 
-Abra `index.html` em um navegador moderno, cole sua chave da API do Gemini, informe o conteúdo e escolha de 1 a 5 questões.
+- Node.js 18 ou superior
+- Uma chave de API da xAI, criada no painel oficial da xAI
 
-Opcionalmente, execute localmente com Node.js:
+## Executar localmente
+
+1. Copie `.env.example` para um arquivo chamado `.env`.
+2. Abra `.env` e substitua `cole_sua_chave_aqui` pela sua chave da xAI. Não compartilhe esse arquivo nem o envie ao GitHub.
+3. Instale as dependências e inicie:
 
 ```bash
 npm install
 npm start
 ```
 
-Depois, acesse <http://localhost:3000>.
+4. Abra <http://localhost:3000>.
 
-## Publicar no GitHub Pages
+## Executar com Docker Compose
 
-Nas configurações do repositório, abra **Pages**, escolha a branch `main` e a pasta `/ (root)`, e salve. O site será publicado usando o `index.html` deste repositório.
+Crie o arquivo `.env` conforme as instruções acima e execute:
 
-## Chave da API
+```bash
+docker compose up --build
+```
 
-A chave é digitada pelo usuário no navegador e usada diretamente para chamar a API do Google. Ela não é armazenada pelo site. Não coloque uma chave pessoal no código nem a envie ao GitHub. Para limitar o risco de uso indevido, configure restrições e cotas para a chave no Google AI Studio.
+Depois abra <http://localhost:3000>.
+
+## Hospedagem
+
+O GitHub Pages hospeda apenas arquivos estáticos e não executa o servidor Express. Para a geração por IA funcionar, publique o projeto em um serviço que execute Node.js/Docker e configure `GROK_API_KEY` como variável de ambiente no painel desse serviço.
+
+## Segurança
+
+Uma chave enviada em mensagens ou colocada em código público deve ser considerada exposta. Revogue chaves expostas no painel da xAI e crie outra. Nunca adicione o arquivo `.env_ ` ao Git.
