@@ -1,127 +1,185 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Quiz com API do Gemini</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 700px; margin: 30px auto; padding: 20px; background: #f4f7f6; color: #333; }
-        .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        textarea, input { width: 100%; padding: 12px; margin-top: 8px; margin-bottom: 16px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
-        button { background: #2ea44f; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; }
-        button:hover { background: #2c974b; }
-        .question-box { background: #fafafa; border: 1px solid #e1e4e8; padding: 15px; border-radius: 6px; margin-top: 15px; }
-        .option { display: block; margin: 8px 0; cursor: pointer; padding: 8px; background: #fff; border: 1px solid #ddd; border-radius: 4px; }
-        .option:hover { background: #f0f0f0; }
-        .correct { background: #d4edda !important; border-color: #c3e6cb !important; color: #155724; font-weight: bold; }
-        .incorrect { background: #f8d7da !important; border-color: #f5c6cb !important; color: #721c24; }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gerador de Quiz com Gemini</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 700px; margin: 30px auto; padding: 20px; background: #f4f7f6; color: #333; }
+    .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,.1); }
+    textarea, input:not([type="radio"]) { width: 100%; padding: 12px; margin-top: 8px; margin-bottom: 16px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+    button { background: #2ea44f; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; }
+    button:hover { background: #2c974b; }
+    button:disabled { opacity: .65; cursor: wait; }
+    .question-box { background: #fafafa; border: 1px solid #e1e4e8; padding: 15px; border-radius: 6px; margin-top: 15px; }
+    .option { display: block; margin: 8px 0; cursor: pointer; padding: 8px; background: #fff; border: 1px solid #ddd; border-radius: 4px; }
+    .option:hover { background: #f0f0f0; }
+    .option input { margin-right: 8px; }
+    .correct { background: #d4edda; border-color: #c3e6cb; color: #155724; font-weight: bold; }
+    .incorrect { background: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+    .error { color: #b42318; }
+  </style>
 </head>
 <body>
-    <div class="card">
-        <h2>Gerador de Quiz com IA Real (Gemini)</h2>
-        
-        <label for="apiKey">Sua Chave de API do Gemini:</label>
-        <input type="password" id="apiKey" placeholder="Cole sua chave da API aqui (AIzaSy...)">
+  <main class="card">
+    <h1>Gerador de Quiz com IA (Gemini)</h1>
 
-        <label for="conteudo">Conteúdo da Matéria:</label>
-        <textarea id="conteudo" rows="5" placeholder="Cole aqui o texto ou resumo..."></textarea>
-        
-        <label for="qtd">Quantidade de Questões:</label>
-        <input type="number" id="qtd" min="1" max="5" value="3">
-        
-        <button onclick="gerarQuizComGemini()">Gerar Questões com IA</button>
-        
-        <div id="quiz-container" style="margin-top: 20px;"></div>
-    </div>
+    <label for="apiKey">Sua chave de API do Gemini:</label>
+    <input type="password" id="apiKey" autocomplete="off" placeholder="Cole sua chave da API aqui (AIzaSy...)">
 
-    <script type="importmap">
-      {
-        "imports": {
-          "@google/genai": "https://esm.run/@google/genai"
-        }
+    <label for="conteudo">Conteúdo da matéria:</label>
+    <textarea id="conteudo" rows="5" placeholder="Cole aqui o texto ou resumo..."></textarea>
+
+    <label for="qtd">Quantidade de questões (1 a 5):</label>
+    <input type="number" id="qtd" min="1" max="5" value="3">
+
+    <button id="generate" type="button">Gerar questões com IA</button>
+    <div id="quiz-container" aria-live="polite"></div>
+  </main>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "@google/genai": "https://esm.run/@google/genai"
       }
-    </script>
+    }
+  </script>
+  <script type="module">
+    import { GoogleGenAI } from "@google/genai";
 
-    <script type="module">
-        import { GoogleGenAI } from "@google/genai";
+    const apiKeyInput = document.getElementById('apiKey');
+    const contentInput = document.getElementById('conteudo');
+    const countInput = document.getElementById('qtd');
+    const generateButton = document.getElementById('generate');
+    const container = document.getElementById('quiz-container');
 
-        window.gerarQuizComGemini = async function() {
-            const apiKey = document.getElementById('apiKey').value.trim();
-            const texto = document.getElementById('conteudo').value.trim();
-            const qtd = document.getElementById('qtd').value;
-            const container = document.getElementById('quiz-container');
-            
-            if (!apiKey) {
-                alert('Por favor, insira sua chave de API do Gemini!');
-                return;
-            }
-            if (!texto) {
-                alert('Por favor, insira o conteúdo da matéria!');
-                return;
-            }
+    function renderQuestions(questions) {
+      const heading = document.createElement('h2');
+      heading.textContent = 'Quiz gerado pela IA';
+      container.replaceChildren(heading);
 
-            container.innerHTML = '<h3>A IA está gerando as perguntas com base no seu texto... 🧠</h3>';
+      questions.forEach((question, questionIndex) => {
+        const box = document.createElement('section');
+        box.className = 'question-box';
 
-            try {
-                const ai = new GoogleGenAI({ apiKey: apiKey });
+        const title = document.createElement('p');
+        const strong = document.createElement('strong');
+        strong.textContent = `Questão ${questionIndex + 1}: `;
+        title.append(strong, document.createTextNode(question.pergunta));
+        box.appendChild(title);
 
-                const prompt = `Com base estritamente no texto fornecido abaixo, crie exatamente ${qtd} perguntas de múltipla escolha.
-                Retorne APENAS um JSON puro (sem formatação markdown, sem crases como \`\`\`json), seguindo exatamente esta estrutura de array:
-                [
-                  {
-                    "pergunta": "Texto da pergunta?",
-                    "opcoes": ["Opção A", "Opção B", "Opção C", "Opção D"],
-                    "correta": 0
-                  }
-                ]
-                Onde 'correta' é o número do índice da resposta correta (0 para a primeira opção, 1 para a segunda, etc.).
-                
-                Texto de referência: ${texto}`;
+        question.opcoes.forEach((option, optionIndex) => {
+          const label = document.createElement('label');
+          label.className = 'option';
 
-                const response = await ai.models.generateContent({
-                    model: 'gemini-2.5-flash',
-                    contents: prompt,
-                });
-
-                let respostaTexto = response.text.trim();
-                // Remove blocos de markdown caso a IA inclua
-                respostaTexto = respostaTexto.replace(/```json/g, '').replace(/```/g, '').trim();
-
-                const questoes = JSON.parse(respostaTexto);
-                
-                let html = '<h3>Quiz Gerado pela IA:</h3>';
-                questoes.forEach((q, i) => {
-                    html += `
-                        <div class="question-box">
-                            <p><strong>Questão ${i + 1}:</strong> ${q.pergunta}</p>
-                    `;
-                    q.opcoes.forEach((opt, j) => {
-                        const letra = String.fromCharCode(65 + j);
-                        html += `<label class="option"><input type="radio" name="q${i}" onclick="verificar(this, ${j}, ${q.correta})"> ${letra}) ${opt}</label>`;
-                    });
-                    html += `</div>`;
-                });
-                container.innerHTML = html;
-
-            } catch (error) {
-                console.error(error);
-                container.innerHTML = `<p style="color: red;">Erro ao gerar com a IA. Verifique se a Chave de API está correta ou se o formato do texto é válido.</p>`;
-            }
-        };
-
-        window.verificar = function(element, selecionada, correta) {
-            const parent = element.parentElement.parentElement;
-            const options = parent.querySelectorAll('.option');
-            options.forEach((opt, idx) => {
-                opt.style.pointerEvents = 'none';
-                if (idx === correta) {
-                    opt.classList.add('correct');
-                } else if (idx === selecionada && selecionada !== correta) {
-                    opt.classList.add('incorrect');
-                }
+          const radio = document.createElement('input');
+          radio.type = 'radio';
+          radio.name = `question-${questionIndex}`;
+          radio.addEventListener('change', () => {
+            box.querySelectorAll('.option').forEach((item, index) => {
+              item.style.pointerEvents = 'none';
+              if (index === question.correta) {
+                item.classList.add('correct');
+              } else if (index === optionIndex) {
+                item.classList.add('incorrect');
+              }
             });
-        };
-    </script>
+          });
+
+          const letter = String.fromCharCode(65 + optionIndex);
+          label.append(radio, document.createTextNode(`${letter}) ${option}`));
+          box.appendChild(label);
+        });
+
+        container.appendChild(box);
+      });
+    }
+
+    function showError(message) {
+      container.replaceChildren();
+      const error = document.createElement('p');
+      error.className = 'error';
+      error.textContent = message;
+      container.appendChild(error);
+    }
+
+    generateButton.addEventListener('click', async () => {
+      const apiKey = apiKeyInput.value.trim();
+      const text = contentInput.value.trim();
+      const count = Number(countInput.value);
+
+      if (!apiKey) {
+        showError('Insira sua chave de API do Gemini.');
+        return;
+      }
+      if (!text) {
+        showError('Insira o conteúdo da matéria.');
+        return;
+      }
+      if (!Number.isInteger(count) || count < 1 || count > 5) {
+        showError('A quantidade de questões deve estar entre 1 e 5.');
+        return;
+      }
+
+      generateButton.disabled = true;
+      container.replaceChildren();
+      const loading = document.createElement('h2');
+      loading.textContent = 'A IA está gerando as perguntas com base no seu texto...';
+      container.appendChild(loading);
+
+      try {
+        const ai = new GoogleGenAI({ apiKey });
+        const prompt = `Com base estritamente no texto fornecido abaixo, crie exatamente ${count} perguntas de múltipla escolha.
+Retorne apenas um JSON puro, sem formatação markdown, seguindo esta estrutura:
+[
+  {
+    "pergunta": "Texto da pergunta?",
+    "opcoes": ["Opção A", "Opção B", "Opção C", "Opção D"],
+    "correta": 0
+  }
+]
+"correta" é o índice da resposta certa, começando em 0.
+
+Texto de referência: ${text}`;
+
+        const response = await ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: prompt
+        });
+
+        const responseText = response.text;
+        if (typeof responseText !== 'string' || !responseText.trim()) {
+          throw new Error('A resposta da IA veio vazia.');
+        }
+
+        const jsonText = responseText.trim()
+          .replace(/^```(?:json)?\s*/i, '')
+          .replace(/\s*```$/, '');
+        const questions = JSON.parse(jsonText);
+        const validQuestions = Array.isArray(questions)
+          && questions.length === count
+          && questions.every((question) =>
+            typeof question.pergunta === 'string'
+            && Array.isArray(question.opcoes)
+            && question.opcoes.length === 4
+            && question.opcoes.every((option) => typeof option === 'string')
+            && Number.isInteger(question.correta)
+            && question.correta >= 0
+            && question.correta < question.opcoes.length
+          );
+
+        if (!validQuestions) {
+          throw new Error('A IA retornou questões em um formato inválido.');
+        }
+
+        renderQuestions(questions);
+      } catch (error) {
+        console.error('Erro ao gerar o quiz:', error);
+        showError('Não foi possível gerar o quiz. Confira sua chave, conexão e tente novamente.');
+      } finally {
+        generateButton.disabled = false;
+      }
+    });
+  </script>
 </body>
 </html>
