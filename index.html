@@ -104,8 +104,19 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ text, count })
         });
-        const data = await response.json();
+        const responseText = await response.text();
+        let data;
+        try {
+          data = JSON.parse(responseText);
+        } catch {
+          throw new Error(
+            'O servidor da API não está conectado a esta página. O GitHub Pages hospeda apenas a interface; publique o backend Node.js e configure GROQ_API_KEY no serviço de hospedagem.'
+          );
+        }
         if (!response.ok) throw new Error(data.error || 'Não foi possível gerar o quiz.');
+        if (!Array.isArray(data.questions)) {
+          throw new Error('A API Groq retornou uma resposta inesperada.');
+        }
         renderQuestions(data.questions);
       } catch (error) {
         showError(error.message || 'Não foi possível gerar o quiz. Tente novamente.');
