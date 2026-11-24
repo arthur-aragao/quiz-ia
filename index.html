@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Gerador de Quiz com Grok</title>
+  <title>Gerador de Quiz com Groq</title>
   <style>
     body { font-family: Arial, sans-serif; max-width: 700px; margin: 30px auto; padding: 20px; background: #f4f7f6; color: #333; }
     .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,.1); }
@@ -23,7 +23,7 @@
 </head>
 <body>
   <main class="card">
-    <h1>Gerador de Quiz com IA (Grok)</h1>
+    <h1>Gerador de Quiz com IA (Groq)</h1>
     <p class="status">A chave da API é mantida no servidor; não é necessário colá-la nesta página.</p>
 
     <label for="conteudo">Conteúdo da matéria:</label>
@@ -44,7 +44,7 @@
 
     function renderQuestions(questions) {
       const heading = document.createElement('h2');
-      heading.textContent = 'Quiz gerado pelo Grok';
+      heading.textContent = 'Quiz gerado pelo Groq';
       container.replaceChildren(heading);
 
       questions.forEach((question, questionIndex) => {
@@ -95,7 +95,7 @@
       generateButton.disabled = true;
       container.replaceChildren();
       const loading = document.createElement('h2');
-      loading.textContent = 'O Grok está gerando as perguntas com base no seu texto...';
+      loading.textContent = 'O Groq está gerando as perguntas com base no seu texto...';
       container.appendChild(loading);
 
       try {
